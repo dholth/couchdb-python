@@ -109,10 +109,12 @@ def load_design_doc(directory, strip=False, predicate=lambda x: True):
         for name in dirnames:
             if name == '_attachments':
                 raise NotImplementedError("_attachments are not supported")
-            subkey, subthing = objects[os.path.join(dirpath, name)]
+            fullpath = os.path.join(dirpath, name)
+            if not predicate(fullpath): continue
+            subkey, subthing = objects[fullpath]
             if subkey in ob:
-                raise DuplicateKeyError("directory '{0}{1}' clobbers key '{2}'"
-                                        .format(dirpath, name, subkey))
+                raise DuplicateKeyError("directory '{0}' clobbers key '{1}'"
+                                        .format(fullpath,subkey))
             ob[subkey] = subthing
 
     return ob
