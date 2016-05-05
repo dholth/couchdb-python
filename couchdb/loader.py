@@ -67,14 +67,24 @@ import pprint
 import codecs
 import json
 
-def load_design_doc(directory, strip_files=False):
+class DuplicateKeyError(ValueError):
+    pass
+
+def load_design_doc(directory, strip=False, predicate=lambda x: True):
     """
     Load a design document from the filesystem.
 
-    strip_files: remove leading and trailing whitespace from file contents,
+    strip: remove leading and trailing whitespace from file contents,
         like couchdbkit.
+
+    predicate: function that is passed the full path to each file or directory.
+        Each entry is only added to the document if predicate returns True.
+        Can be used to ignore backup files etc.
     """
     objects = {}
+
+    if not os.path.isdir(directory):
+        raise OSError("No directory: '{}'".format(directory))
 
     for (dirpath, dirnames, filenames) in os.walk(directory, topdown=False):
         key = os.path.split(dirpath)[-1]
@@ -84,18 +94,25 @@ def load_design_doc(directory, strip_files=False):
         for name in filenames:
             fkey = os.path.splitext(name)[0]
             fullname = os.path.join(dirpath, name)
+            if not predicate(fullname): continue
+            if fkey in ob:
+                raise DuplicateKeyError("file '{}' clobbers key '{}'"
+                                        .format(fullname, fkey))
             with codecs.open(fullname, 'r', 'utf-8') as f:
                 contents = f.read()
                 if name.endswith('.json'):
                     contents = json.loads(contents)
-                elif strip_files:
+                elif strip:
                     contents = contents.strip()
                 ob[fkey] = contents
 
         for name in dirnames:
             if name == '_attachments':
-                raise NotImplementedError()
+                raise NotImplementedError("_attachments are not supported")
             subkey, subthing = objects[os.path.join(dirpath, name)]
+            if subkey in ob:
+                raise DuplicateKeyError("directory '{}{}' clobbers key '{}'"
+                                        .format(dirpath, name, subkey))
             ob[subkey] = subthing
 
     return ob

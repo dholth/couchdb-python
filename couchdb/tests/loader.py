@@ -20,10 +20,38 @@ expected = {
 
 class LoaderTestCase(unittest.TestCase):
 
+    directory = os.path.join(os.path.dirname(__file__), '_loader')
+
     def test_loader(self):
-        directory = os.path.join(os.path.dirname(__file__), '_loader')
-        doc = loader.load_design_doc(directory, strip_files=True)
+        doc = loader.load_design_doc(self.directory,
+                                     strip=True,
+                                     predicate=lambda x: \
+                                        not x.endswith('.xml'))
         self.assertEqual(doc, expected)
+
+    def test_clobber_1(self):
+        def clobber():
+            doc = loader.load_design_doc(self.directory,
+                                     strip=True,
+                                     predicate=lambda x: \
+                                     not x.endswith('filters.xml'))
+
+        self.assertRaises(loader.DuplicateKeyError, clobber)
+
+    def test_clobber_2(self):
+        def clobber():
+            doc = loader.load_design_doc(self.directory,
+                                     strip=True,
+                                     predicate=lambda x: \
+                                     not x.endswith('language.xml'))
+
+        self.assertRaises(loader.DuplicateKeyError, clobber)
+
+    def test_bad_directory(self):
+        def bad_directory():
+            doc = loader.load_design_doc('directory_does_not_exist')
+
+        self.assertRaises(OSError, bad_directory)
 
 
 def suite():
