@@ -84,7 +84,7 @@ def load_design_doc(directory, strip=False, predicate=lambda x: True):
     objects = {}
 
     if not os.path.isdir(directory):
-        raise OSError("No directory: '{}'".format(directory))
+        raise OSError("No directory: '{0}'".format(directory))
 
     for (dirpath, dirnames, filenames) in os.walk(directory, topdown=False):
         key = os.path.split(dirpath)[-1]
@@ -96,7 +96,7 @@ def load_design_doc(directory, strip=False, predicate=lambda x: True):
             fullname = os.path.join(dirpath, name)
             if not predicate(fullname): continue
             if fkey in ob:
-                raise DuplicateKeyError("file '{}' clobbers key '{}'"
+                raise DuplicateKeyError("file '{0}' clobbers key '{1}'"
                                         .format(fullname, fkey))
             with codecs.open(fullname, 'r', 'utf-8') as f:
                 contents = f.read()
@@ -111,7 +111,7 @@ def load_design_doc(directory, strip=False, predicate=lambda x: True):
                 raise NotImplementedError("_attachments are not supported")
             subkey, subthing = objects[os.path.join(dirpath, name)]
             if subkey in ob:
-                raise DuplicateKeyError("directory '{}{}' clobbers key '{}'"
+                raise DuplicateKeyError("directory '{0}{1}' clobbers key '{2}'"
                                         .format(dirpath, name, subkey))
             ob[subkey] = subthing
 
@@ -123,7 +123,7 @@ def main():
     try:
         directory = sys.argv[1]
     except IndexError:
-        sys.stderr.write("Usage:\n\t{} [directory]\n".format(sys.argv[0]))
+        sys.stderr.write("Usage:\n\t{0} [directory]\n".format(sys.argv[0]))
         sys.exit(1)
     obj = load_design_doc(directory)
     sys.stdout.write(json.dumps(obj, indent=2))
